@@ -15,12 +15,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import MelCloudDataUpdateCoordinator
+from . import MelCloudConfigEntry
+from .coordinator import MelCloudDataUpdateCoordinator, MelCloudDevice
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -50,8 +51,16 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         value_fn=lambda x: x.device.total_energy_consumed,
         enabled=lambda x: x.device.has_energy_consumed_meter,
     ),
+    MelcloudSensorEntityDescription(
+        key="outside_temperature",
+        translation_key="outside_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.device.outdoor_temperature,
+        enabled=lambda x: x.device.has_outdoor_temperature,
+    ),
 )
-
 ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="outside_temperature",
@@ -72,7 +81,6 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         enabled=lambda x: True,
     ),
 )
-
 ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="room_temperature",
@@ -106,27 +114,28 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MelCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud device sensors based on config_entry."""
-    coordinator: MelCloudDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     mel_devices = coordinator.data
+
     entities: list[MelDeviceSensor] = [
-        MelDeviceSensor(mel_device, description, coordinator)
+        MelDeviceSensor(coordinator, mel_device, description)
         for description in ATA_SENSORS
-        for mel_device in mel_devices.get(DEVICE_TYPE_ATA, [])
+        for mel_device in mel_devices[DEVICE_TYPE_ATA]
         if description.enabled(mel_device)
     ] + [
-        MelDeviceSensor(mel_device, description, coordinator)
+        MelDeviceSensor(coordinator, mel_device, description)
         for description in ATW_SENSORS
-        for mel_device in mel_devices.get(DEVICE_TYPE_ATW, [])
+        for mel_device in mel_devices[DEVICE_TYPE_ATW]
         if description.enabled(mel_device)
     ]
     entities.extend(
         [
-            AtwZoneSensor(mel_device, zone, description, coordinator)
-            for mel_device in mel_devices.get(DEVICE_TYPE_ATW, [])
+            AtwZoneSensor(coordinator, mel_device, zone, description)
+            for mel_device in mel_devices[DEVICE_TYPE_ATW]
             for zone in mel_device.device.zones
             for description in ATW_ZONE_SENSORS
             if description.enabled(zone)
@@ -135,52 +144,48 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MelDeviceSensor(SensorEntity):
+class MelDeviceSensor(
+    CoordinatorEntity[MelCloudDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Sensor."""
 
     entity_description: MelcloudSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
-        api: Any,
-        description: MelcloudSensorEntityDescription,
         coordinator: MelCloudDataUpdateCoordinator,
+        api: MelCloudDevice,
+        description: MelcloudSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._api = api
         self.entity_description = description
-        self.coordinator = coordinator
+
         self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{description.key}"
         self._attr_device_info = api.device_info
 
     @property
     def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success and self._api.available
+        """Return True if entity is available."""
+        return super().available and self._api.available
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._api)
 
-    async def async_added_to_hass(self) -> None:
-        """Register for coordinator updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
 
 class AtwZoneSensor(MelDeviceSensor):
-    """Air-to-Water zone sensor."""
+    """Air-to-Air device sensor."""
 
     def __init__(
         self,
-        api: Any,
+        coordinator: MelCloudDataUpdateCoordinator,
+        api: MelCloudDevice,
         zone: Zone,
         description: MelcloudSensorEntityDescription,
-        coordinator: MelCloudDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         if zone.zone_index != 1:
@@ -188,7 +193,7 @@ class AtwZoneSensor(MelDeviceSensor):
                 description,
                 key=f"{description.key}-zone-{zone.zone_index}",
             )
-        super().__init__(api, description, coordinator)
+        super().__init__(coordinator, api, description)
 
         self._attr_device_info = api.zone_device_info(zone)
         self._zone = zone

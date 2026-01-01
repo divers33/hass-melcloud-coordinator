@@ -40,11 +40,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> MELCloudOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler()
+        return MELCloudOptionsFlowHandler()
 
     async def _create_entry(self, username: str, token: str) -> ConfigFlowResult:
         """Register new entry."""
@@ -213,7 +211,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlowWithReload):
+class MELCloudOptionsFlowHandler(OptionsFlowWithReload):
     """Handle MELCloud options."""
 
     async def async_step_init(

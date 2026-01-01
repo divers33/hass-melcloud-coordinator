@@ -3,14 +3,11 @@
 DOMAIN = "melcloud"
 
 CONF_POSITION = "position"
-
-# Polling interval configuration
 CONF_SCAN_INTERVAL = "scan_interval"
-DEFAULT_SCAN_INTERVAL = 15  # minutes - keeps current behavior
+
+DEFAULT_SCAN_INTERVAL = 15  # minutes - matches historical behavior
 MIN_SCAN_INTERVAL = 1  # minutes
 MAX_SCAN_INTERVAL = 60  # minutes
-
-MANUFACTURER = "Mitsubishi Electric"
 
 ATTR_STATUS = "status"
 ATTR_VANE_HORIZONTAL = "vane_horizontal"

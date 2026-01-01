@@ -17,33 +17,35 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import MelCloudConfigEntry
 from .const import ATTR_STATUS
-from .coordinator import MelCloudDataUpdateCoordinator
-from .device import MelCloudDevice
+from .coordinator import MelCloudDataUpdateCoordinator, MelCloudDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MelCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up MelCloud device water_heater based on config_entry."""
-    coordinator: MelCloudDataUpdateCoordinator = entry.runtime_data
+    """Set up MelCloud device climate based on config_entry."""
+    coordinator = entry.runtime_data
     mel_devices = coordinator.data
     async_add_entities(
         [
-            AtwWaterHeater(mel_device, mel_device.device, coordinator)
-            for mel_device in mel_devices.get(DEVICE_TYPE_ATW, [])
+            AtwWaterHeater(coordinator, mel_device, mel_device.device)
+            for mel_device in mel_devices[DEVICE_TYPE_ATW]
         ]
     )
 
 
-class AtwWaterHeater(WaterHeaterEntity):
+class AtwWaterHeater(
+    CoordinatorEntity[MelCloudDataUpdateCoordinator], WaterHeaterEntity
+):
     """Air-to-Water water heater."""
 
     _attr_supported_features = (
@@ -53,39 +55,34 @@ class AtwWaterHeater(WaterHeaterEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_should_poll = False
 
     def __init__(
         self,
+        coordinator: MelCloudDataUpdateCoordinator,
         api: MelCloudDevice,
         device: AtwDevice,
-        coordinator: MelCloudDataUpdateCoordinator,
     ) -> None:
         """Initialize water heater device."""
+        super().__init__(coordinator)
         self._api = api
         self._device = device
-        self.coordinator = coordinator
         self._attr_unique_id = api.device.serial
         self._attr_device_info = api.device_info
 
-    async def async_added_to_hass(self) -> None:
-        """Register for coordinator updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
     @property
     def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success and self._api.available
+        """Return True if entity is available."""
+        return super().available and self._api.available
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._device.set({PROPERTY_POWER: True})
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.set({PROPERTY_POWER: False})
+        await self.coordinator.async_request_refresh()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -126,10 +123,12 @@ class AtwWaterHeater(WaterHeaterEntity):
                 )
             }
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         await self._device.set({PROPERTY_OPERATION_MODE: operation_mode})
+        await self.coordinator.async_request_refresh()
 
     @property
     def min_temp(self) -> float:
