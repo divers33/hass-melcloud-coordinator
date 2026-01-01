@@ -1,0 +1,99 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed.",
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Re-configuration was successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "description": "The MELCloud integration needs to re-authenticate your connection details",
+        "title": "Reauthenticate"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "Enter the (new) password for MELCloud."
+        },
+        "description": "Reconfigure the entry to obtain a new token, for your account: `{username}`.",
+        "title": "Reconfigure your MELCloud"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "description": "Connect using your MELCloud account.",
+        "title": "Connect to MELCloud"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "MELCloud Options",
+        "description": "Configure the polling interval for device updates.",
+        "data": {
+          "scan_interval": "Update interval (minutes)"
+        },
+        "data_description": {
+          "scan_interval": "Enter a value between 1 and 60. Polling too frequently (below 2 minutes) may trigger MELCloud rate limiting, which causes errors and can temporarily lock your account for several hours. Recommended: 5 minutes for responsive control, 15 minutes for stable operation."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "flow_temperature": {
+        "name": "Flow temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "return_temperature": {
+        "name": "Flow return temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "tank_temperature": {
+        "name": "Tank temperature"
+      }
+    }
+  },
+  "services": {
+    "set_vane_horizontal": {
+      "description": "Sets horizontal vane position.",
+      "fields": {
+        "position": {
+          "description": "Horizontal vane position. Possible options can be found in the vane_horizontal_positions state attribute.",
+          "name": "Position"
+        }
+      },
+      "name": "Set vane horizontal"
+    },
+    "set_vane_vertical": {
+      "description": "Sets vertical vane position.",
+      "fields": {
+        "position": {
+          "description": "Vertical vane position. Possible options can be found in the vane_vertical_positions state attribute.",
+          "name": "Position"
+        }
+      },
+      "name": "Set vane vertical"
+    }
+  }
+}
