@@ -37,6 +37,38 @@ class MelCloudDevice:
         self.name = device.name
         self._available = True
 
+    @property
+    def device_conf(self) -> dict[str, Any]:
+        """Return device configuration from MELCloud."""
+        device_conf = self.device._device_conf
+        if device_conf is None:
+            return {}
+        return device_conf.get("Device", {})
+
+    @property
+    def wifi_signal(self) -> int | None:
+        """Return WiFi signal strength."""
+        return self.device_conf.get("WifiSignalStrength")
+
+    @property
+    def has_wifi_signal(self) -> bool:
+        """Return True if WiFi signal is available."""
+        return self.wifi_signal is not None
+
+    @property
+    def extra_attributes(self) -> dict[str, Any]:
+        """Return extra device attributes."""
+        data: dict[str, Any] = {
+            "device_id": self.device.device_id,
+            "serial": self.device.serial,
+            "mac": self.device.mac,
+        }
+        if (unit_infos := self.device.units) is not None:
+            for i, unit in enumerate(unit_infos[:2]):
+                data[f"unit_{i}_model"] = unit.get("model")
+                data[f"unit_{i}_serial"] = unit.get("serial")
+        return data
+
     async def async_set(self, properties: dict[str, Any]) -> None:
         """Write state changes to the MELCloud API."""
         try:

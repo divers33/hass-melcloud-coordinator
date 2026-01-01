@@ -52,6 +52,24 @@ ATA_HVAC_MODE_LOOKUP = {
 }
 ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
 
+# Friendly vane position names (API value -> Display name)
+VANE_HORIZONTAL_POSITIONS = {
+    "1": "Left",
+    "2": "Left-Center",
+    "3": "Center",
+    "4": "Right-Center",
+    "5": "Right",
+    "12": "Swing",
+}
+VANE_VERTICAL_POSITIONS = {
+    "1": "Up",
+    "2": "Up-Center",
+    "3": "Center",
+    "4": "Down-Center",
+    "5": "Down",
+    "7": "Swing",
+}
+
 
 ATW_ZONE_HVAC_MODE_LOOKUP = {
     atw.ZONE_STATUS_HEAT: HVACMode.HEAT,
@@ -169,7 +187,8 @@ class AtaDeviceClimate(MelCloudClimate):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
-        attr = {}
+        attr: dict[str, Any] = {ATTR_STATUS: self._device.status}
+        attr.update(self.api.extra_attributes)
 
         if vane_horizontal := self._device.vane_horizontal:
             attr.update(
@@ -288,33 +307,61 @@ class AtaDeviceClimate(MelCloudClimate):
         await self._device.set({ata.PROPERTY_VANE_VERTICAL: position})
         await self.coordinator.async_request_refresh()
 
+    def _get_friendly_vane_vertical(self, position: str | None) -> str | None:
+        """Return friendly name for vertical vane position."""
+        if position is None:
+            return None
+        return VANE_VERTICAL_POSITIONS.get(position, position)
+
+    def _get_friendly_vane_horizontal(self, position: str | None) -> str | None:
+        """Return friendly name for horizontal vane position."""
+        if position is None:
+            return None
+        return VANE_HORIZONTAL_POSITIONS.get(position, position)
+
+    def _get_api_vane_vertical(self, friendly_name: str) -> str:
+        """Return API value for vertical vane friendly name."""
+        reverse = {v: k for k, v in VANE_VERTICAL_POSITIONS.items()}
+        return reverse.get(friendly_name, friendly_name)
+
+    def _get_api_vane_horizontal(self, friendly_name: str) -> str:
+        """Return API value for horizontal vane friendly name."""
+        reverse = {v: k for k, v in VANE_HORIZONTAL_POSITIONS.items()}
+        return reverse.get(friendly_name, friendly_name)
+
     @property
     def swing_mode(self) -> str | None:
         """Return vertical vane position or mode."""
-        return self._device.vane_vertical
+        return self._get_friendly_vane_vertical(self._device.vane_vertical)
 
     @property
     def swing_horizontal_mode(self) -> str | None:
         """Return horizontal vane position or mode."""
-        return self._device.vane_horizontal
+        return self._get_friendly_vane_horizontal(self._device.vane_horizontal)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set vertical vane position or mode."""
-        await self.async_set_vane_vertical(swing_mode)
+        await self.async_set_vane_vertical(self._get_api_vane_vertical(swing_mode))
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set horizontal vane position or mode."""
-        await self.async_set_vane_horizontal(swing_horizontal_mode)
+        await self.async_set_vane_horizontal(self._get_api_vane_horizontal(swing_horizontal_mode))
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return a list of available vertical vane positions and modes."""
-        return self._device.vane_vertical_positions
+        positions = self._device.vane_vertical_positions
+        if positions is None:
+            return None
+        return [self._get_friendly_vane_vertical(p) or p for p in positions]
 
     @property
     def swing_horizontal_modes(self) -> list[str] | None:
         """Return a list of available horizontal vane positions and modes."""
-        return self._device.vane_horizontal_positions
+        positions = self._device.vane_horizontal_positions
+        if positions is None:
+            return None
+        return [self._get_friendly_vane_horizontal(p) or p for p in positions]
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
