@@ -124,6 +124,12 @@ class MelCloudDataUpdateCoordinator(
         except ClientResponseError as ex:
             if ex.status in (401, 403):
                 raise ConfigEntryAuthFailed from ex
+            if ex.status == 429:
+                raise UpdateFailed(
+                    "MELCloud rate limit exceeded. Your account may be temporarily "
+                    "blocked. Consider increasing the update interval in integration "
+                    "options (Settings > Devices & Services > MELCloud > Configure)"
+                ) from ex
             raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
         except (TimeoutError, ClientConnectionError) as ex:
             raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
@@ -146,9 +152,18 @@ class MelCloudDataUpdateCoordinator(
                 except ClientResponseError as ex:
                     if ex.status in (401, 403):
                         raise ConfigEntryAuthFailed from ex
-                    _LOGGER.warning(
-                        "Error updating %s: %s", mel_device.name, ex
-                    )
+                    if ex.status == 429:
+                        _LOGGER.error(
+                            "MELCloud rate limit exceeded for %s. Your account may be "
+                            "temporarily blocked. Consider increasing the update interval "
+                            "in integration options (Settings > Devices & Services > "
+                            "MELCloud > Configure)",
+                            mel_device.name,
+                        )
+                    else:
+                        _LOGGER.warning(
+                            "Error updating %s: %s", mel_device.name, ex
+                        )
                     mel_device._available = False
                 except ClientConnectionError as ex:
                     _LOGGER.warning(

@@ -45,12 +45,12 @@
     "step": {
       "init": {
         "title": "MELCloud Options",
-        "description": "Configure how often to update device information from MELCloud.",
+        "description": "Configure the polling interval for device updates.",
         "data": {
           "scan_interval": "Update interval (minutes)"
         },
         "data_description": {
-          "scan_interval": "How often Home Assistant polls MELCloud for device updates. Lower values provide faster updates but may trigger rate limiting. Recommended: 2-5 minutes for active use, 15 minutes for stable operation."
+          "scan_interval": "Enter a value between 1 and 60. Polling too frequently (below 2 minutes) may trigger MELCloud rate limiting, which causes errors and can temporarily lock your account for several hours. Recommended: 5 minutes for responsive control, 15 minutes for stable operation."
         }
       }
     }
