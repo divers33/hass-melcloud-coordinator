@@ -70,7 +70,7 @@ Set vertical vane position for ATA devices.
 
 ## Requirements
 
-- Home Assistant 2024.1.0 or newer
+- Home Assistant 2025.8.0 or newer (requires `OptionsFlowWithReload`)
 - pymelcloud library (automatically installed)
 
 ## Credits
