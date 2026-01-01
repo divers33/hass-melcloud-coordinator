@@ -16,8 +16,13 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+# Delay before refreshing after a state change to allow device to process
+# and avoid race conditions with rapid sequential changes
+REQUEST_REFRESH_DELAY = 1.5
 
 from .const import (
     CONF_SCAN_INTERVAL,
@@ -138,6 +143,12 @@ class MelCloudDataUpdateCoordinator(
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=scan_interval_minutes),
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=REQUEST_REFRESH_DELAY,
+                immediate=False,
+            ),
         )
         self._session = async_get_clientsession(hass)
         self._devices: dict[str, list[MelCloudDevice]] = {}
