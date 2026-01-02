@@ -91,7 +91,7 @@ ATW_ZONE_HVAC_ACTION_LOOKUP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     entry: MelCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:

@@ -57,6 +57,9 @@
   },
   "entity": {
     "sensor": {
+      "energy_consumed": {
+        "name": "Energy consumed"
+      },
       "flow_temperature": {
         "name": "Flow temperature"
       },
@@ -71,6 +74,9 @@
       },
       "tank_temperature": {
         "name": "Tank temperature"
+      },
+      "wifi_signal": {
+        "name": "WiFi signal"
       }
     }
   },

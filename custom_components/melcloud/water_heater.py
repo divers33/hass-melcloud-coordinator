@@ -28,7 +28,7 @@ from .coordinator import MelCloudDataUpdateCoordinator, MelCloudDevice
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     entry: MelCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -74,12 +74,12 @@ class AtwWaterHeater(
         """Return True if entity is available."""
         return super().available and self._api.available
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn the entity on."""
         await self._device.set({PROPERTY_POWER: True})
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.set({PROPERTY_POWER: False})
         await self.coordinator.async_request_refresh()
