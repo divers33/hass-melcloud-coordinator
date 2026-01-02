@@ -187,7 +187,7 @@ class AtaDeviceClimate(MelCloudClimate):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
-        attr: dict[str, Any] = {ATTR_STATUS: self._device.status}
+        attr: dict[str, Any] = {}
         attr.update(self.api.extra_attributes)
 
         if vane_horizontal := self._device.vane_horizontal:
