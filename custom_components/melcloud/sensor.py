@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import dataclasses
-import logging
 from typing import Any
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
@@ -22,8 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import MelCloudConfigEntry, MelCloudDevice
 from .entity import MelCloudEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -165,13 +162,7 @@ class MelDeviceSensor(MelCloudEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        value = self.entity_description.value_fn(self._api)
-        _LOGGER.debug(
-            "Sensor %s native_value called, returning: %s",
-            self.entity_id,
-            value,
-        )
-        return value
+        return self.entity_description.value_fn(self._api)
 
 
 class AtwZoneSensor(MelDeviceSensor):
@@ -197,10 +188,4 @@ class AtwZoneSensor(MelDeviceSensor):
     @property
     def native_value(self) -> float | None:
         """Return zone based state."""
-        value = self.entity_description.value_fn(self._zone)
-        _LOGGER.debug(
-            "Zone sensor %s native_value called, returning: %s",
-            self.entity_id,
-            value,
-        )
-        return value
+        return self.entity_description.value_fn(self._zone)
