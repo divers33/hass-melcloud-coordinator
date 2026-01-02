@@ -2,28 +2,28 @@
   "config": {
     "abort": {
       "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed.",
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
-      "reauth_successful": "Re-authentication was successful",
-      "reconfigure_successful": "Re-configuration was successful"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "Password",
-          "username": "Email"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
         },
         "description": "The MELCloud integration needs to re-authenticate your connection details",
-        "title": "Reauthenticate"
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "reconfigure": {
         "data": {
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "password": "Enter the (new) password for MELCloud."
@@ -33,25 +33,11 @@
       },
       "user": {
         "data": {
-          "password": "Password",
-          "username": "Email"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
         },
         "description": "Connect using your MELCloud account.",
         "title": "Connect to MELCloud"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "MELCloud Options",
-        "description": "Configure the polling interval for device updates.",
-        "data": {
-          "scan_interval": "Update interval (minutes)"
-        },
-        "data_description": {
-          "scan_interval": "Enter a value between 1 and 60. Polling too frequently (below 2 minutes) may trigger MELCloud rate limiting, which causes errors and can temporarily lock your account for several hours. Recommended: 5 minutes for responsive control, 15 minutes for stable operation."
-        }
       }
     }
   },
@@ -74,9 +60,6 @@
       },
       "tank_temperature": {
         "name": "Tank temperature"
-      },
-      "wifi_signal": {
-        "name": "WiFi signal"
       }
     }
   },
