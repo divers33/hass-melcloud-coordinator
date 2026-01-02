@@ -15,7 +15,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfTemperature
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfEnergy,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -63,7 +67,8 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="wifi_signal",
         translation_key="wifi_signal",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.wifi_signal,
         enabled=lambda x: x.has_wifi_signal,
@@ -92,7 +97,8 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
         key="wifi_signal",
         translation_key="wifi_signal",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.wifi_signal,
         enabled=lambda x: x.has_wifi_signal,
