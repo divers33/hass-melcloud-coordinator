@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import hashlib
+import json
 import logging
 from typing import Any
 
@@ -29,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 # and avoid race conditions with rapid sequential changes
 REQUEST_REFRESH_DELAY = 1.5
 
-# Default update interval in minutes (matches upstream Throttle value)
-DEFAULT_UPDATE_INTERVAL = 15
+# Default update interval in minutes (reduced for debug testing)
+DEFAULT_UPDATE_INTERVAL = 2
 
 
 class MelCloudDevice:
@@ -111,6 +113,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
         """Initialize the per-device coordinator."""
         self._device = device
         self.device_available = True
+        self._last_state_hash = None
 
         super().__init__(
             hass,
@@ -135,6 +138,38 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
         try:
             await self._device.update()
             self.device_available = True
+
+            # Log actual values received
+            _LOGGER.debug(
+                "Device %s state after update - room_temp: %s, last_seen: %s",
+                self._device.name,
+                getattr(self._device, 'room_temperature', 'N/A'),
+                getattr(self._device, 'last_seen', 'N/A'),
+            )
+
+            # Log state hash to detect if data actually changed
+            current_state = self._device._state
+            if current_state:
+                # Log LastCommunication to see if MELCloud itself has fresh data
+                last_comm = current_state.get("LastCommunication", "unknown")
+                _LOGGER.debug(
+                    "Device %s MELCloud LastCommunication: %s",
+                    self._device.name,
+                    last_comm
+                )
+
+                # Hash the state to detect changes
+                state_str = json.dumps(current_state, sort_keys=True, default=str)
+                current_hash = hashlib.md5(state_str.encode()).hexdigest()[:8]
+                changed = current_hash != self._last_state_hash
+                _LOGGER.debug(
+                    "Device %s data hash: %s (changed: %s, previous: %s)",
+                    self._device.name,
+                    current_hash,
+                    changed,
+                    self._last_state_hash
+                )
+                self._last_state_hash = current_hash
         except ClientResponseError as ex:
             if ex.status in (401, 403):
                 raise ConfigEntryAuthFailed from ex
