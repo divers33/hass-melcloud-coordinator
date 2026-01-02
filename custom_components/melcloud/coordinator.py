@@ -139,13 +139,26 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
             await self._device.update()
             self.device_available = True
 
-            # Log actual values received
+            # Log actual values received (ATW-specific)
             _LOGGER.debug(
-                "Device %s state after update - room_temp: %s, last_seen: %s",
+                "Device %s state after update - tank_temp: %s, outside_temp: %s, last_seen: %s",
                 self._device.name,
-                getattr(self._device, 'room_temperature', 'N/A'),
+                getattr(self._device, 'tank_temperature', 'N/A'),
+                getattr(self._device, 'outside_temperature', 'N/A'),
                 getattr(self._device, 'last_seen', 'N/A'),
             )
+
+            # Log zone temperatures if ATW device
+            if hasattr(self._device, 'zones') and self._device.zones:
+                for zone in self._device.zones:
+                    _LOGGER.debug(
+                        "Device %s Zone %s - room_temp: %s, flow_temp: %s, return_temp: %s",
+                        self._device.name,
+                        getattr(zone, 'name', zone.zone_index),
+                        getattr(zone, 'room_temperature', 'N/A'),
+                        getattr(zone, 'flow_temperature', 'N/A'),
+                        getattr(zone, 'return_temperature', 'N/A'),
+                    )
 
             # Log state hash to detect if data actually changed
             current_state = self._device._state
