@@ -89,6 +89,15 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         value_fn=lambda x: x.device.tank_temperature,
         enabled=lambda x: True,
     ),
+    MelcloudSensorEntityDescription(
+        key="wifi_signal",
+        translation_key="wifi_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.wifi_signal,
+        enabled=lambda x: x.has_wifi_signal,
+        entity_registry_enabled_default=False,
+    ),
 )
 ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
