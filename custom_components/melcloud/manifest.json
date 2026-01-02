@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/divers33/hass-melcloud-coordinator/issues",
   "loggers": ["melcloud"],
   "requirements": ["python-melcloud==0.1.2"],
-  "version": "1.2.1"
+  "version": "1.2.2"
 }
